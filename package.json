@@ -1,0 +1,19 @@
+{
+  "name": "collections",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ginden/collections.git"
+  },
+  "author": "Michał Wadas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ginden/collections/issues"
+  },
+  "homepage": "https://github.com/Ginden/collections#readme"
+}

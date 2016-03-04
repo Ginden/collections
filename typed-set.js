@@ -1,4 +1,4 @@
-export function constructType(keyType) {
+export default function constructType(keyType) {
     return class TypedSet extends Set {
         add(key) {
             if (typeof keyType == "string") {

@@ -30,6 +30,7 @@ class LinkedList {
             this._head = this._tail = null;
         }
         this.version = Symbol();
+        return val;
     }
 
     push(...vals) {
@@ -60,7 +61,7 @@ class LinkedList {
     }
 
     setItem(n, val) {
-        if (n > this.length) {
+        if (n >= this.length) {
             throw RangeError();
         }
         let i = 0;
@@ -71,6 +72,20 @@ class LinkedList {
             }
             i += 1;
         }
+    }
+
+    unshift(el) {
+        const oldHead = this._head;
+        this._head = new Node(el, oldHead);
+        return ++this.length;
+    }
+
+    shift() {
+        const oldHead = this._head;
+        const newHead = oldHead.nextNode;
+        this._head = newHead;
+        this.length--;
+        return newHead ? undefined : newHead.value;
     }
 
     filter(callback, thisArg = null) {
@@ -117,3 +132,5 @@ class LinkedList {
         }
     }
 }
+
+export default LinkedList;
