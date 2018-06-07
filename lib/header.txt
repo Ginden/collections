@@ -1,0 +1,8 @@
+/**
+$LICENSE
+
+Library version: $VERSION
+
+Hash of files used to generate this file: $FILE_HASH
+
+**/
