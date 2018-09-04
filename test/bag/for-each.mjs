@@ -42,4 +42,21 @@ test('Bag#forEach properly uses second argument as this', () => {
 
 });
 
-test('Bag#forEach properly uses ')
+test('Bag#forEach properly provides second argument', () => {
+    const arr = [1, 2, 1, 3];
+    const expected = [1, 1, 2, 3];
+    const instance = new Bag(arr);
+    instance.forEach((val, i) => {
+        expect(expected[i], `expected[${i}]`).to.equal(val);
+    });
+
+});
+
+test('Bag#forEach properly provides instance as third argument', () => {
+    const arr = [1, 2, 1, 3];
+    const instance = new Bag(arr);
+    instance.forEach((ignore, ignore2, bag) => {
+        expect(bag).to.equal(instance);
+    });
+
+});

@@ -2,9 +2,77 @@ import chalk from 'chalk';
 
 const tests = [];
 
+const _fn = Symbol();
+const doNothing = () => Promise.resolve();
+const {
+    red,
+    green,
+    greenBright
+} = chalk;
+
+class Promise extends global.Promise {
+    /*
+    Copied from https://github.com/matthew-andrews/Promise.prototype.finally/blob/master/finally.js
+     */
+    finally(callback) {
+        const Ctor = this.constructor;
+
+        return this.then(
+            value => Ctor.resolve(callback()).then(() => value),
+            reason => Ctor.resolve(callback()).then(() => {
+                throw reason;
+            }));
+    }
+
+}
+
+class SingleTest {
+    constructor(name, fn) {
+        this.name = name;
+        this[_fn] = fn;
+    }
+
+    after(fn) {
+        this.cleanup = fn;
+        return this;
+    }
+
+    before(fn) {
+        this.prepare = fn;
+        return this;
+    }
+
+    get run() {
+        return () => {
+            const startTime = Date.now();
+            const {name} = this;
+            return Promise.resolve()
+                .then(this[_fn])
+                .then(() => {
+                    return {
+                        name,
+                        error: null,
+                        time: Date.now() - startTime
+                    };
+                })
+                .catch(error => {
+                    return {
+                        name,
+                        error,
+                        time: Date.now() - startTime
+                    }
+                });
+        }
+    }
+
+
+}
+
 export function test(name, fn) {
-    tests.push([name, fn]);
-    runTests();
+    const test = new SingleTest(name, fn);
+    tests.push(test);
+    void runTests();
+    return test;
 }
 
 let isRunning = false;
@@ -12,32 +80,45 @@ let isRunning = false;
 async function runTests() {
     if (isRunning) return;
     isRunning = true;
-    let entry;
+    let test;
     await new Promise(resolve => setTimeout(resolve, 1));
-    tests.sort(([a], [b]) => {
-        return a.localeCompare(b);
+    tests.sort((a, b) => {
+        return a.name.localeCompare(b.name);
     });
-    while(entry = tests.shift()) {
-        const [name, fn] = entry;
-        const startTime = Date.now();
+    while (test = tests.shift()) {
         await Promise.resolve()
-            .then(fn)
-            .then(() => reportSuccess(name, startTime), (err) => reportFailure(name, err, startTime));
+            .then(test.prepare || doNothing)
+            .then(test.run)
+            .finally(test.cleanup || doNothing)
+            .then(report)
     }
 
 
 }
 
-function reportSuccess(testName, startTime) {
-    const timeDiff = Date.now() - startTime;
-    console.error(chalk.green(`✔ ${testName} (${timeDiff.toFixed(1)}ms)`));
+
+function report(testResult) {
+    const {
+        name,
+        time,
+        error
+    } = testResult;
+    if (error) {
+        console.error(red(`  ✖ ${name} (${formatTime(time)})
+  ${formatError(error)}`));
+        process.exitCode = 1;
+    } else {
+        console.error(green(`  ✔ ${name} (${formatTime(time)})`));
+
+    }
 }
 
-function reportFailure(testName, error, startTime) {
-    const timeDiff = Date.now() - startTime;
-    console.error(chalk.red(`✖ ${testName} (${timeDiff.toFixed(1)}ms)
-  ${formatError(error)}`));
-    process.exitCode = 1;
+
+function formatTime(ms) {
+    return greenBright(ms
+        .toFixed(1)
+        .replace('.0', '')
+        .concat('ms'));
 }
 
 function formatError(err) {
