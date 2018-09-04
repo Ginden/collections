@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 Library version: 1.0.0
 
-Hash of files used to generate this file: eae8d49d5d956cbccc6bd5e6a490c548e291ffbd90bb174a78fbf9a964b3d902
+Hash of files used to generate this file: a948a7b0c8912684804f070b370e7f204b0829263e60e986709b1f84b8cfe783
 
 **/
 'use strict';
@@ -33,20 +33,35 @@ class Bag {
     }
   }
 
+  /**
+   *
+   * @return {number}
+   */
   get size() {
     return this[_size];
   }
+
+  /**
+   *
+   * @param {number} val
+   * @throws TypeError
+   */
   set size(val) {
-    throw TypeError();
+    throw TypeError('Bag#size is read-only');
   }
 
   forEach(callback, thisArg) {
     let j = 0;
     for (const key of this) {
-      Reflect.apply(callback, thisArg, [thisArg, key, j++, this]);
+      Reflect.apply(callback, thisArg, [key, j++, this]);
     }
   }
 
+  /**
+   *
+   * @param {*} el
+   * @return {Bag}
+   */
   add(el) {
     const currentCount = this.count(el);
     this[_size] += 1;
@@ -54,6 +69,11 @@ class Bag {
     return this;
   }
 
+  /**
+   *
+   * @param {*} el
+   * @return {Bag}
+   */
   delete(el) {
     const count = this.count(el);
     if (count === 1) {
@@ -68,10 +88,20 @@ class Bag {
     return this;
   }
 
+  /**
+   *
+   * @param {*} el
+   * @returns {boolean}
+   */
   has(el) {
     return this[_set].has(el);
   }
 
+  /**
+   *
+   * @param {*} el
+   * @returns {number}
+   */
   count(el) {
     return this[_set].get(el) | 0;
   }
@@ -89,6 +119,10 @@ class Bag {
 class Counter {
   constructor(iterable) {
     this._counter = new Map();
+    if (iterable)
+      for (const val of iterable) {
+        this.increment(val);
+    }
   }
 
   get size() {
@@ -99,30 +133,35 @@ class Counter {
     return (k) => this.inc(k);
   }
 
-  inc(key) {
-    this._counter.set(key, 1 + this._counter.get(key) | 0);
-    return this;
-  }
-
+  /**
+   *
+   * @param {*} key
+   * @returns {Counter}
+   */
   increment(key) {
-    return this.inc(key);
-  }
-
-  dec(key) {
-    this._counter.set(key, Math.max((this._counter.get(key) | 0) - 1, 0));
+    const currentCount = this._counter.get(key) | 0;
+    this._counter.set(key, currentCount + 1);
     return this;
   }
 
+  /**
+   *
+   * @param {*} key
+   * @returns {Counter}
+   */
   decrement(key) {
-    return this.dec(key);
+    const currentCount = this._counter.get(key) | 0;
+    this._counter.set(key, Math.max(currentCount - 1, 0));
+    return this;
   }
 
-  del(key) {
-    return this._counter.delete(key);
-  }
-
+  /**
+   *
+   * @param {*} key
+   * @returns {*|boolean}
+   */
   delete(key) {
-    return this.del(key);
+    return this._counter.delete(key);
   }
 
   * elements() {
@@ -139,6 +178,11 @@ class Counter {
     }
   }
 
+  /**
+   *
+   * @param iterable
+   * @returns {Counter}
+   */
   update(iterable) {
     for (const el of iterable) {
       this.inc(el);
@@ -146,6 +190,11 @@ class Counter {
     return this;
   }
 
+  /**
+   *
+   * @param iterable
+   * @returns {Counter}
+   */
   subtract(iterable) {
     for (const el of iterable) {
       this.dec(el);
@@ -178,44 +227,69 @@ class Node {
   }
 }
 
+const _head = Symbol('LinkedList#head');
+const _tail = Symbol('LinkedList#_tail');
+const _length = Symbol('LinkedList#length');
+const _version = Symbol('LinkedList#version');
+
 class LinkedList {
   constructor(...args) {
-    this._head = null;
-    this._tail = null;
-    this.version = Symbol();
-    this._length = args.length;
+    this[_head] = null;
+    this[_tail] = null;
+    this[_version] = Symbol();
+    this[_length] = args.length;
     this.push(...args);
   }
 
+  /**
+   *
+   * @return {number}
+   */
   get length() {
-    return this._length;
+    return this[_length];
   }
 
+  /**
+   *
+   * @param {number} val
+   */
   set length(val) {
     const q = [];
     q.length = val;
     val = q.length;
     if (val === 0) {
-      this._head = this._tail = null;
+      this[_head] = this[_tail] = null;
     }
-    this.version = Symbol();
+    this[_version] = Symbol();
     return val;
   }
 
+
+  /**
+   *
+   * @param {...*} vals
+   * @return {number}
+   */
   push(...vals) {
     for (const val of vals) {
       const node = new Node(val);
-      if (!this._head) {
-        this._head = node;
+      if (!this[_head]) {
+        this[_head] = node;
       }
-      if (this._tail) {
-        this._tail.setNextNode(node);
+      if (this[_tail]) {
+        this[_tail].setNextNode(node);
       }
-      this._tail = node;
+      this[_tail] = node;
       this.length++;
     }
+    return this.length;
   }
 
+  /**
+   *
+   * @param {number} n
+   * @return {*}
+   */
   getItem(n) {
     let i = 0;
     if (n > this.length) {
@@ -223,40 +297,62 @@ class LinkedList {
     }
     for (const val of this) {
       if (i === n) {
-        return val;
+        return val.value;
       }
       i += 1;
     }
   }
 
-  setItem(n, val) {
+  /**
+   *
+   * @param {number} n
+   * @param {*} valueToSet
+   * @return {LinkedList}
+   */
+  setItem(n, valueToSet) {
     if (n >= this.length) {
       throw RangeError();
     }
+    this[_version] = Symbol();
     let i = 0;
-    for (const val of this._iterate()) {
+    for (const node of this._iterate()) {
       if (i === n) {
-        val.value = val;
+        node.value = valueToSet;
         return this;
       }
       i += 1;
     }
   }
 
+  /**
+   *
+   * @param {*} el
+   * @return {number}
+   */
   unshift(el) {
-    const oldHead = this._head;
-    this._head = new Node(el, oldHead);
+    const oldHead = this[_head];
+    this[_head] = new Node(el, oldHead);
     return ++this.length;
   }
 
+  /**
+   *
+   * @return {undefined|*}
+   */
   shift() {
-    const oldHead = this._head;
+    const oldHead = this[_head];
     const newHead = oldHead.nextNode;
-    this._head = newHead;
+    this[_head] = newHead;
     this.length--;
     return newHead ? undefined : newHead.value;
   }
 
+  /**
+   *
+   * @param {function} callback
+   * @param {object} [thisArg]
+   * @return {LinkedList}
+   */
   filter(callback, thisArg = null) {
     const copy = new LinkedList();
     for (const [i, val] of this.entries()) {
@@ -267,6 +363,13 @@ class LinkedList {
     return copy;
   }
 
+
+  /**
+   *
+   * @param {function} callback
+   * @param {object} [thisArg]
+   * @return {LinkedList}
+   */
   map(callback, thisArg = null) {
     const copy = new LinkedList();
     for (const [i, val] of this.entries()) {
@@ -278,18 +381,18 @@ class LinkedList {
   * entries() {
     let i = 0;
     for (const val of this) {
-      yield[i, val];
+      yield[i++, val];
     }
   }
 
 
   * _iterate() {
-    const version = this.version;
-    let node = this._head;
+    const version = this[_version];
+    let node = this[_head];
     while (node) {
       yield node;
       node = node.nextNode;
-      if (this.version !== version) {
+      if (this[_version] !== version) {
         throw new ReferenceError('Linked list modified by outside');
       }
     }

@@ -13,6 +13,10 @@ async function runTests() {
     if (isRunning) return;
     isRunning = true;
     let entry;
+    await new Promise(resolve => setTimeout(resolve, 1));
+    tests.sort(([a], [b]) => {
+        return a.localeCompare(b);
+    });
     while(entry = tests.shift()) {
         const [name, fn] = entry;
         const startTime = Date.now();
@@ -32,10 +36,10 @@ function reportSuccess(testName, startTime) {
 function reportFailure(testName, error, startTime) {
     const timeDiff = Date.now() - startTime;
     console.error(chalk.red(`✖ ${testName} (${timeDiff.toFixed(1)}ms)
-    ${formatError(error)}`));
+  ${formatError(error)}`));
     process.exitCode = 1;
 }
 
 function formatError(err) {
-    return err.stack.split('\n').map(line => `  ${line}`);
+    return err.stack.split('\n').map(line => `    ${line}`).join('\n');
 }

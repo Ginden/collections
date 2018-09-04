@@ -25,20 +25,23 @@ const defaultOptions = {
     ]
 };
 
-export default [
-    {
-        output: {
-            format: 'cjs',
-            file: 'dist/index.cjs.js',
-            interop: false,
-            banner
-        }
-    },
-    {
-        output: {
-            format: 'es',
-            file: 'dist/index.module.mjs',
-            interop: false,
-            banner
-        }
-    }].map(obj => Object.assign(obj, defaultOptions));
+const cjs = {
+    ...defaultOptions,
+    output: {
+        format: 'cjs',
+        file: 'dist/index.cjs.js',
+        interop: false,
+        banner
+    }
+};
+const esm = {
+    ...defaultOptions,
+    output: {
+        format: 'es',
+        file: 'dist/index.module.mjs',
+        interop: false,
+        banner
+    }
+}
+
+export default [cjs, esm];

@@ -3,7 +3,7 @@ import {Bag} from "../../dist/index.module.mjs";
 import chai from 'chai';
 const {expect} = chai;
 
-test('Add primitive values to Bag', () => {
+test('Bag#add - primitive values', () => {
     const instance = new Bag();
     [3, 1, 2, 1, 2].forEach(v => instance.add(v));
     const arrayed = [...instance];
@@ -12,7 +12,7 @@ test('Add primitive values to Bag', () => {
     expect(instance.size).to.equal(5);
 });
 
-test('Add objects to Bag', () => {
+test('Bag#add - objects', () => {
     const instance = new Bag();
     const obj1 = {[Math.random()]: Math.random()};
     const obj2 = {[Math.random()]: Math.random()};
